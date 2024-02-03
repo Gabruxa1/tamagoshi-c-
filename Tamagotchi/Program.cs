@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using RestSharp;
 using System;
+using System.Text.Json.Serialization;
 
 namespace Tamagotchi
 {
@@ -20,12 +21,12 @@ namespace Tamagotchi
                 Console.WriteLine($"{i + 1}. {pokemonSpeciesResponse.Results[i].Name}");
             }
 
-            int escolha;
+            int choice;
 
             while (true)
             {
                 Console.WriteLine("\nEscolha um número: ");
-                if (!int.TryParse(Console.ReadLine(), out escolha) && escolha >= 1 && escolha <= pokemonSpeciesResponse.Results.Count)
+                if (!int.TryParse(Console.ReadLine(), out choice) && choice >= 1 && choice <= pokemonSpeciesResponse.Results.Count)
                 {
                     Console.WriteLine("Escolha inválida. Tente novamente.");
                 }
@@ -35,10 +36,28 @@ namespace Tamagotchi
                 }
             }
 
-            client = new RestClient($"https://pokeapi.co/api/v2/pokemon/{escolha}");
+            client = new RestClient($"https://pokeapi.co/api/v2/pokemon/{choice}");
             request = new RestRequest(Method.GET);
             response = client.Execute(request);
-            Console.WriteLine(response.Content);
+
+            var pokemonDetails = JsonConvert.DeserializeObject<PokemonDetailsResult>(response.Content);
+            var chosenPokemon = pokemonSpeciesResponse.Results[choice -1];
+
+            Console.WriteLine("\n");
+            Console.WriteLine($"Você escolheu {chosenPokemon.Name}!");
+            Console.WriteLine($"Detalhes:");
+            Console.WriteLine($"- Nome: {chosenPokemon.Name}");
+            Console.WriteLine($"- Peso: {pokemonDetails.Weight}");
+            Console.WriteLine($"- Altura: {pokemonDetails.Height}");
+
+            Console.WriteLine("\n Habilidades do Mascote: ");
+
+            foreach (var abilityDetail in pokemonDetails.Abilities)
+            {
+                Console.WriteLine("Nome da Habilidade: " + abilityDetail.Ability.Name);
+            }
+
+            Console.WriteLine("\n");
         }
     }
 }
